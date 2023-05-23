@@ -1,42 +1,54 @@
 import logo from './logo.svg';
-import {useEffect, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import './App.css';
 
 
 function App() {
   const [data, setData] = useState();
-  const [acceptLanguage, setAcceptLanguage] = useState('ru-RU');
+  const [headers, setHeaders] = useState({
+    'Accept-Language': 'ru-RU',
+    'X-Current-UID': 1234567890
+  });
 
-  const getData = () => {
+  const getData = useCallback(() => {
     fetch('http://localhost:8080', {
-      headers: {
-        'Accept-Language': acceptLanguage,
-      }
+      headers,
     })
     .then(response=> response.json())
     .then(data => setData(data));
-  }
+  }, [headers]);
+
+  const onHeadersChange = (value, headerName) => {
+    setHeaders((prevHeaders) => {
+      return {
+        ...prevHeaders,
+        [headerName]: value,
+      };
+    });
+  };
 
   useEffect(() => {
     getData();
-  }, []);
+  }, [])
 
-  const onClick = () => {
-    getData();
-  }
-  
   return (
     <div className="App">
       <h1>{data}</h1>
-      <button onClick={onClick}>Load data</button>
       <button onClick={() => {
-        if (acceptLanguage === 'ru-RU') {
-          setAcceptLanguage('us-US')
-        }
-        if (acceptLanguage === 'us-US') {
-          setAcceptLanguage('ru-RU')
-        }
-      }}>{acceptLanguage}</button>
+        getData();
+      }}>Load data</button>
+      <div>
+        <ul>
+          <li>
+            <span>Accept-Language</span>
+            <input onChange={(event => onHeadersChange(event.target.value, 'Accept-Language'))}  />
+          </li>
+          <li>
+            <span>X-Current-UID</span>
+            <input onChange={(event => onHeadersChange(event.target.value, 'X-Current-UID'))} />
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }
